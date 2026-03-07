@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <rect id="bg" width="500" height="500" fill="#0b0f19" />
+    
+    <linearGradient id="neonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ccff33" />
+      <stop offset="50%" stop-color="#39ff14" />
+      <stop offset="100%" stop-color="#00aa00" />
+    </linearGradient>
+
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <use href="#bg" />
+
+  <g filter="url(#glow)">
+    
+    <path d="M 195 130 L 80 250 L 195 370" fill="none" stroke="url(#neonGrad)" stroke-width="22" stroke-linecap="square" stroke-linejoin="miter" />
+    <path d="M 305 130 L 420 250 L 305 370" fill="none" stroke="url(#neonGrad)" stroke-width="22" stroke-linecap="square" stroke-linejoin="miter" />
+
+    <g fill="none" stroke="url(#neonGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="210" y1="195" x2="270" y2="185" />
+      <line x1="210" y1="195" x2="160" y2="250" />
+      <line x1="210" y1="195" x2="265" y2="250" />
+      <line x1="210" y1="195" x2="215" y2="290" />
+      
+      <line x1="270" y1="185" x2="315" y2="205" />
+      <line x1="270" y1="185" x2="265" y2="250" />
+
+      <line x1="160" y1="250" x2="215" y2="290" />
+
+      <line x1="215" y1="290" x2="265" y2="250" />
+      <line x1="215" y1="290" x2="295" y2="295" />
+
+      <line x1="265" y1="250" x2="340" y2="250" />
+      <line x1="265" y1="250" x2="295" y2="295" />
+      <line x1="265" y1="250" x2="315" y2="205" />
+
+      <line x1="340" y1="250" x2="315" y2="205" />
+      <line x1="340" y1="250" x2="295" y2="295" />
+
+      <path d="M 245 285 L 275 335 L 285 305 L 295 295" />
+    </g>
+
+    <g fill="#0b0f19" stroke="url(#neonGrad)" stroke-width="6">
+      <circle cx="210" cy="195" r="8" />
+      <circle cx="270" cy="185" r="8" />
+      <circle cx="160" cy="250" r="8" />
+      <circle cx="215" cy="290" r="8" />
+      <circle cx="265" cy="250" r="8" />
+      <circle cx="340" cy="250" r="8" />
+      <circle cx="295" cy="295" r="8" />
+      <circle cx="315" cy="205" r="8" />
+    </g>
+
+  </g>
+</svg>
