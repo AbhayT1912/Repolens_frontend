@@ -37,9 +37,9 @@ const getRepoName = (repo) => {
 };
 
 const QUICK_ACTIONS = [
-  { to: '/analyze', icon: '🔍', label: 'Analyze New Repo',  color: '#4ade80' },
-  { to: '/profile',  icon: '👤', label: 'Edit Profile',      color: '#60a5fa' },
-  { to: '/settings', icon: '⚙',  label: 'Account Settings',  color: '#a78bfa' },
+  { to: '/analyze', icon: '', label: 'Analyze New Repo',  color: '#4ade80' },
+  { to: '/profile',  icon: '', label: 'Edit Profile',      color: '#60a5fa' },
+  { to: '/settings', icon: '',  label: 'Account Settings',  color: '#a78bfa' },
 ];
 
 /* ══════════════════════════════════════════════════
@@ -264,28 +264,28 @@ export default function Dashboard() {
 
   const stats = [
     {
-      icon: '📦',
+      icon: '',
       label: 'Repos Analyzed',
       value: String(summary.repos_analyzed ?? 0),
       sub: 'across your account',
       color: '#4ade80',
     },
     {
-      icon: '💬',
+      icon: '',
       label: 'AI Tokens',
       value: String(summary.ai_tokens_used ?? 0),
       sub: 'total AI usage',
       color: '#60a5fa',
     },
     {
-      icon: '⚡',
+      icon: '',
       label: 'Credits Left',
       value: String(summary.credits_left ?? 0),
       sub: `of ${summary.credits_limit ?? 500} available`,
       color: '#fbbf24',
     },
     {
-      icon: '🕐',
+      icon: '',
       label: 'Analyses Saved',
       value: String(summary.analyses_saved ?? 0),
       sub: 'total history',

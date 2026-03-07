@@ -139,12 +139,12 @@ function RepoSidebar({ repoId }) {
           {repoId?.replace(/-/g, '/')}
         </div>
       </div>
-      <SidebarLink to={`/${repoId}`}            end icon="📦" label="Overview"   />
-      <SidebarLink to={`/${repoId}/structure`}      icon="🗂" label="Structure"  />
-      <SidebarLink to={`/${repoId}/graph`}          icon="🕸" label="Call Graph" />
-      <SidebarLink to={`/${repoId}/analytics`}      icon="📊" label="Analytics"  />
-      <SidebarLink to={`/${repoId}/ask`}            icon="💬" label="Ask AI"     />
-      <SidebarLink to={`/${repoId}/history`}        icon="🕐" label="History"    />
+      <SidebarLink to={`/${repoId}`}            end icon="" label="Overview"   />
+      <SidebarLink to={`/${repoId}/structure`}      icon="" label="Structure"  />
+      <SidebarLink to={`/${repoId}/graph`}          icon="" label="Call Graph" />
+      <SidebarLink to={`/${repoId}/analytics`}      icon="" label="Analytics"  />
+      <SidebarLink to={`/${repoId}/ask`}            icon="" label="Ask AI"     />
+      <SidebarLink to={`/${repoId}/history`}        icon="" label="History"    />
     </div>
   );
 }
@@ -468,8 +468,8 @@ export default function AppLayout() {
     </div>
   )}
 
-  <SidebarLink to="/dashboard" end icon="🏠" label={collapsed || isMobile ? '' : 'Dashboard'} />
-  <SidebarLink to="/analyze"       icon="🔍" label={collapsed || isMobile ? '' : 'Analyze Repo'} />
+  <SidebarLink to="/dashboard" end icon="" label={collapsed || isMobile ? '' : 'Dashboard'} />
+  <SidebarLink to="/analyze"       icon="" label={collapsed || isMobile ? '' : 'Analyze Repo'} />
 
   {repoId && !collapsed && !isMobile && <RepoSidebar repoId={repoId} />}
 
@@ -484,8 +484,8 @@ export default function AppLayout() {
     </>
   )}
 
-  <SidebarLink to="/profile"  icon="👤" label={collapsed || isMobile ? '' : 'Profile'} />
-  <SidebarLink to="/settings" icon="⚙"  label={collapsed || isMobile ? '' : 'Settings'} />
+  <SidebarLink to="/profile"  icon="" label={collapsed || isMobile ? '' : 'Profile'} />
+  <SidebarLink to="/settings" icon=""  label={collapsed || isMobile ? '' : 'Settings'} />
 </nav>
 
           {/* XP orbs above user card (only when expanded) */}
