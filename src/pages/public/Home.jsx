@@ -112,7 +112,7 @@ function Chest({ size = 56, style = {} }) {
   useEffect(() => {
     const id = setInterval(() => {
       setOpen(true);
-      setLoot(['💎', '⚔️', '🪙', '✨', '🏆']);
+      setLoot(['', '', '', '', '']);
       setTimeout(() => { setOpen(false); setLoot([]); }, 1500);
     }, 3500);
     return () => clearInterval(id);
@@ -824,10 +824,10 @@ export default function Home() {
 
     <div className="stats-grid">
       {[
-        { icon: '🗂', label: 'Repos Analyzed', value: '12,400+', sub: 'and counting', c: '#4ade80' },
-        { icon: '⚡', label: 'Avg Analysis', value: '< 60s', sub: 'URL to insights', c: '#fbbf24' },
-        { icon: '💬', label: 'AI Questions', value: '340K+', sub: 'answered', c: '#60a5fa' },
-        { icon: '🌟', label: 'Rating', value: '4.9/5', sub: '2,100+ reviews', c: '#a78bfa' },
+        { icon: '', label: 'Repos Analyzed', value: '12,400+', sub: 'and counting', c: '#4ade80' },
+        { icon: '', label: 'Avg Analysis', value: '< 60s', sub: 'URL to insights', c: '#fbbf24' },
+        { icon: '', label: 'AI Questions', value: '340K+', sub: 'answered', c: '#60a5fa' },
+        { icon: '', label: 'Rating', value: '4.9/5', sub: '2,100+ reviews', c: '#a78bfa' },
       ].map((s, i) => (
         <div key={i} data-reveal data-d={`${i + 1}`}
           style={{
