@@ -67,6 +67,7 @@ import RepoStructure from './pages/repo/RepoStructure';
 import RepoGraph from './pages/repo/RepoGraph';
 import FunctionDetail from './pages/repo/FunctionDetail';
 import RepoAnalytics from './pages/repo/RepoAnalytics';
+import RepoPRAnalysis from './pages/repo/RepoPRAnalysis';
 import RepoAsk from './pages/repo/RepoAsk';
 import RepoHistory from './pages/repo/RepoHistory';
 
@@ -118,6 +119,7 @@ export default function App() {
           <Route path="/:repoId/graph" element={<RepoGraph />} />
           <Route path="/:repoId/function/:functionId" element={<FunctionDetail />} />
           <Route path="/:repoId/analytics" element={<RepoAnalytics />} />
+          <Route path="/:repoId/pr-analysis" element={<RepoPRAnalysis />} />
           <Route path="/:repoId/ask" element={<RepoAsk />} />
           <Route path="/:repoId/history" element={<RepoHistory />} />
         </Route>

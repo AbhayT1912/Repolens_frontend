@@ -274,7 +274,7 @@ export default function Dashboard() {
       icon: '',
       label: 'AI Tokens',
       value: String(summary.ai_tokens_used ?? 0),
-      sub: 'total AI usage',
+      sub: 'spent on AI asks',
       color: '#60a5fa',
     },
     {

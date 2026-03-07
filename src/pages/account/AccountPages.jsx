@@ -338,7 +338,7 @@ export function Profile() {
 
   const STATS = [
     ['Repos Analyzed', String(summary.repos_analyzed ?? 0), '#4ade80'],
-    ['AI Tokens Used', String(summary.ai_tokens_used ?? 0), '#fbbf24'],
+    ['AI Credits Used', String(summary.ai_tokens_used ?? 0), '#fbbf24'],
     ['Member Since',   joinDate,  '#60a5fa'],
     ['Credits Left',   String(summary.credits_left ?? profileData?.credits ?? 0), '#a78bfa'],
   ];

@@ -168,6 +168,7 @@ function RepoTabBar({ repoId }) {
     { to: `/${repoId}/structure`, label: '🗂 Structure'             },
     { to: `/${repoId}/graph`,     label: '🕸 Call Graph'            },
     { to: `/${repoId}/analytics`, label: '📊 Analytics'             },
+    { to: `/${repoId}/pr-analysis`, label: '🔍 PR Analysis'         },
     { to: `/${repoId}/ask`,       label: '💬 Ask AI'                },
     { to: `/${repoId}/history`,   label: '🕐 History'               },
   ];
@@ -204,13 +205,6 @@ function Page({ children }) {
 /* ══════════════════════════════════════════════════
    REPO OVERVIEW
 ══════════════════════════════════════════════════ */
-const MODULES = [
-  { name: 'src/core',        files: 24,  functions: 187, complexity: 'high'   },
-  { name: 'src/components',  files: 52,  functions: 310, complexity: 'medium' },
-  { name: 'src/utils',       files: 18,  functions: 89,  complexity: 'low'    },
-  { name: 'src/hooks',       files: 12,  functions: 44,  complexity: 'low'    },
-  { name: 'src/api',         files: 8,   functions: 62,  complexity: 'medium' },
-];
 const COMPLEX_COLOR = { high: '#f87171', medium: '#fbbf24', low: '#4ade80' };
 
 export function RepoOverview() {
@@ -633,10 +627,83 @@ export function RepoStructure() {
    CALL GRAPH
 ══════════════════════════════════════════════════ */
 
+const GRAPH_CENTER = 50;
+const GRAPH_MAX_RADIUS = 46;
+
+function getGraphNodeSize(nodeCount) {
+  if (nodeCount > 160) return 2.8;
+  if (nodeCount > 120) return 3.2;
+  if (nodeCount > 90) return 3.8;
+  if (nodeCount > 65) return 4.8;
+  if (nodeCount > 40) return 5.8;
+  return 8.5;
+}
+
+function getGraphInitialZoom(nodeCount) {
+  if (nodeCount > 150) return 0.7;
+  if (nodeCount > 110) return 0.78;
+  if (nodeCount > 75) return 0.86;
+  if (nodeCount > 45) return 0.94;
+  return 1;
+}
+
+function getGraphLabelStride(nodeCount) {
+  if (nodeCount > 160) return 12;
+  if (nodeCount > 120) return 10;
+  if (nodeCount > 80) return 8;
+  if (nodeCount > 55) return 6;
+  if (nodeCount > 35) return 4;
+  return 1;
+}
+
+function getGraphLabelSize(nodeCount) {
+  if (nodeCount > 120) return 1.5;
+  if (nodeCount > 80) return 1.9;
+  if (nodeCount > 50) return 2.3;
+  return 3.2;
+}
+
+function layoutGraphNodes(rawNodes) {
+  const total = rawNodes.length;
+  if (!total) return [];
+
+  const baseSize = getGraphNodeSize(total);
+  const laidOut = [];
+  let index = 0;
+  let ring = 0;
+
+  // Use concentric rings so large repos do not collapse onto one circle.
+  while (index < total) {
+    const radius = Math.min(14 + ring * 8, GRAPH_MAX_RADIUS);
+    const ringCapacity = ring === 0 ? 12 : 12 + ring * 8;
+    const ringCount = Math.min(ringCapacity, total - index);
+    const angleOffset = ring % 2 === 0 ? 0 : Math.PI / ringCount;
+
+    for (let i = 0; i < ringCount; i++) {
+      const n = rawNodes[index + i];
+      const angle = (i / ringCount) * 2 * Math.PI + angleOffset;
+
+      laidOut.push({
+        ...n,
+        x: GRAPH_CENTER + radius * Math.cos(angle),
+        y: GRAPH_CENTER + radius * Math.sin(angle),
+        color: n.is_entry ? '#a78bfa' : n.is_dead ? '#1a4a2e' : '#4ade80',
+        size: n.is_entry ? baseSize + 1.4 : baseSize,
+      });
+    }
+
+    index += ringCount;
+    ring += 1;
+  }
+
+  return laidOut;
+}
+
 export function RepoGraph() {
   const { repoId } = useParams();
   const [selected, setSelected] = useState(null);
   const [zoom, setZoom] = useState(1);
+  const [defaultZoom, setDefaultZoom] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
@@ -649,23 +716,15 @@ export function RepoGraph() {
         const res = await api.get(`/${repoId}/graph`);
         if (active && res.success) {
           const data = res.data || res;
-          // Apply a simple circular layout since we don't have X/Y from backend
-          const nodes = (data.nodes || []).map((n, i, arr) => {
-            const angle = (i / arr.length) * 2 * Math.PI;
-            const radius = 35; // centered in 100x100 view
-            return {
-              ...n,
-              x: 50 + radius * Math.cos(angle),
-              y: 50 + radius * Math.sin(angle),
-              color: n.is_entry ? '#a78bfa' : n.is_dead ? '#1a4a2e' : '#4ade80',
-              size: n.is_entry ? 18 : 14
-            };
-          });
+          const nodes = layoutGraphNodes(data.nodes || []);
+          const fittedZoom = getGraphInitialZoom(nodes.length);
           const edges = (data.edges || []).map(e => {
             if (Array.isArray(e)) return e;
             return [e.from || e.source || e.caller, e.to || e.target || e.callee];
           });
           setGraphData({ nodes, edges });
+          setDefaultZoom(fittedZoom);
+          setZoom(fittedZoom);
           setError(null);
         }
       } catch (err) {
@@ -681,6 +740,9 @@ export function RepoGraph() {
   const selNode = graphData.nodes.find(n => n.id === selected);
   const callers = selected ? graphData.edges.filter(([,b]) => b === selected).map(([a]) => a) : [];
   const callees = selected ? graphData.edges.filter(([a]) => a === selected).map(([,b]) => b) : [];
+  const nodeMap = new Map(graphData.nodes.map((n) => [n.id, n]));
+  const labelStride = getGraphLabelStride(graphData.nodes.length);
+  const labelSize = getGraphLabelSize(graphData.nodes.length);
 
   if (loading) return (
     <Page>
@@ -706,7 +768,7 @@ export function RepoGraph() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 22, position: 'relative', zIndex: 1 }}>
         <div className="mc-card" style={{ padding: 0, boxShadow: '6px 6px 0 #040d07' }}>
           <div style={{ padding: '10px 16px', borderBottom: '3px solid #1a4528', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            {[['+ Zoom In', () => setZoom(z => Math.min(z+0.2,2.6))],['- Zoom Out', () => setZoom(z => Math.max(z-0.2,0.4))],['↺ Reset', () => { setZoom(1); setSelected(null); }],['↗ Export', () => {}]].map(([l,a]) => (
+            {[['+ Zoom In', () => setZoom(z => Math.min(z+0.2,2.6))],['- Zoom Out', () => setZoom(z => Math.max(z-0.2,0.4))],['↺ Reset', () => { setZoom(defaultZoom); setSelected(null); }],['↗ Export', () => {}]].map(([l,a]) => (
               <button key={l} className="toolbar-btn" onClick={a}>{l}</button>
             ))}
             <div style={{ marginLeft: 'auto', fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: '#1a4a2e' }}>{Math.round(zoom*100)}% · {graphData.nodes.length} nodes</div>
@@ -716,20 +778,25 @@ export function RepoGraph() {
               <defs><pattern id="mcgrid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="#0d2a14" strokeWidth="0.4"/></pattern></defs>
               <rect width="100" height="100" fill="url(#mcgrid)" />
               {graphData.edges.map(([a,b],i) => { 
-                const na=graphData.nodes.find(n=>n.id===a),
-                      nb=graphData.nodes.find(n=>n.id===b),
+                const na=nodeMap.get(a),
+                      nb=nodeMap.get(b),
                       lit=selected&&(a===selected||b===selected); 
                 if (!na || !nb) return null;
                 return <line key={i} x1={na.x} y1={na.y} x2={nb.x} y2={nb.y} stroke={lit?'#22c55e':'#1a4528'} strokeWidth={lit?1:0.5} strokeDasharray={lit?'none':'2 1'} opacity={lit?0.9:0.5} style={{transition:'all 0.2s'}}/>; 
               })}
-              {graphData.nodes.map(({ id, x, y, label, color, size, is_entry, is_dead }) => {
+              {graphData.nodes.map(({ id, x, y, label, color, size, is_entry, is_dead }, idx) => {
                 const isSel=selected===id, isCaller=callers.includes(id), isCallee=callees.includes(id);
+                const showLabel = isSel || isCaller || isCallee || idx % labelStride === 0;
                 return (
                   <g key={id} onClick={() => setSelected(id===selected?null:id)} style={{ cursor: 'pointer' }}>
                     {(isSel||isCaller||isCallee) && <rect x={x-size/2-2} y={y-size/2-2} width={size+4} height={size+4} fill="none" stroke={isSel?color:isCaller?'#60a5fa':'#4ade80'} strokeWidth={1.5} opacity={0.5} style={{animation:'nodePulse 1.5s ease-in-out infinite'}}/>}
                     <rect x={x-size/2} y={y-size/2} width={size} height={size} fill={isSel?`${color}22`:'#020c06'} stroke={color} strokeWidth={isSel?1.8:0.8} style={{transition:'all 0.15s'}}/>
                     <rect x={x-size/2} y={y-size/2} width={3} height={3} fill={color} opacity={0.7}/>
-                    <text x={x} y={y+size/2+4} textAnchor="middle" fontSize="3.2" fill={color} fontFamily="monospace">{label.length>13?label.slice(0,11)+'…':label}</text>
+                    {showLabel && (
+                      <text x={x} y={y+size/2+4} textAnchor="middle" fontSize={labelSize} fill={color} fontFamily="monospace">
+                        {label.length>13?label.slice(0,11)+'…':label}
+                      </text>
+                    )}
                     {is_entry && <circle cx={x+size/2} cy={y-size/2} r="1.5" fill="#a78bfa" style={{animation:'neonPulse 1s infinite'}} />}
                   </g>
                 );
