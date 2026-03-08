@@ -164,13 +164,13 @@ function LoadingSkeleton() {
 ══════════════════════════════════════════════════ */
 function RepoTabBar({ repoId }) {
   const tabs = [
-    { to: `/${repoId}`,           label: '📦 Overview',   end: true },
-    { to: `/${repoId}/structure`, label: '🗂 Structure'             },
-    { to: `/${repoId}/graph`,     label: '🕸 Call Graph'            },
-    { to: `/${repoId}/analytics`, label: '📊 Analytics'             },
-    { to: `/${repoId}/pr-analysis`, label: '🔍 PR Analysis'         },
-    { to: `/${repoId}/ask`,       label: '💬 Ask AI'                },
-    { to: `/${repoId}/history`,   label: '🕐 History'               },
+    { to: `/${repoId}`,           label: ' Overview',   end: true },
+    { to: `/${repoId}/structure`, label: ' Structure'             },
+    { to: `/${repoId}/graph`,     label: ' Call Graph'            },
+    { to: `/${repoId}/analytics`, label: ' Analytics'             },
+    { to: `/${repoId}/pr-analysis`, label: ' PR Analysis'         },
+    { to: `/${repoId}/ask`,       label: ' Ask AI'                },
+    { to: `/${repoId}/history`,   label: ' History'               },
   ];
   return (
     <div style={{ display: 'flex', borderBottom: '3px solid #22c55e', marginBottom: 28, gap: 0, flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
@@ -272,7 +272,7 @@ export function RepoOverview() {
       <Page>
         <RepoTabBar repoId={repoId} />
         <div style={{ padding: 40, border: '4px solid #ef4444', background: 'rgba(239,68,68,0.05)', textAlign: 'center' }}>
-          <div style={{ fontSize: 40, marginBottom: 16 }}>💀</div>
+          <div style={{ fontSize: 40, marginBottom: 16 }}></div>
           <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 8, color: '#f87171', marginBottom: 16 }}>ANALYSIS_FAILED.ERR</div>
           <div style={{ fontFamily: "'VT323',monospace", fontSize: 20, color: '#ef4444' }}>{error}</div>
           <button 
@@ -312,18 +312,18 @@ export function RepoOverview() {
           <button onClick={handleDownloadPdf} className="mc-btn-ghost" style={{ fontSize: 8, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <span>📄</span> Export PDF
           </button>
-          <Link to={`/${repoId}/ask`} className="mc-btn-primary" style={{ fontSize: 8 }}>💬 Ask AI</Link>
-          <Link to={`/${repoId}/graph`} className="mc-btn-ghost" style={{ fontSize: 8 }}>🕸 View Graph</Link>
+          <Link to={`/${repoId}/ask`} className="mc-btn-primary" style={{ fontSize: 8 }}> Ask AI</Link>
+          <Link to={`/${repoId}/graph`} className="mc-btn-ghost" style={{ fontSize: 8 }}> View Graph</Link>
         </div>
       </div>
 
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16, marginBottom: 28 }}>
         {[
-          { icon: '🗂', label: 'Total Files',  value: overviewStats.total_files?.toLocaleString() || '0', sub: 'across all dirs',   color: '#4ade80', delay: 0.05 },
-          { icon: '⚡', label: 'Functions',     value: overviewStats.total_functions?.toLocaleString() || '0', sub: 'parsed & indexed',  color: '#fbbf24', delay: 0.12 },
-          { icon: '📝', label: 'Lines of Code', value: overviewStats.total_lines_of_code > 1000 ? `${(overviewStats.total_lines_of_code / 1000).toFixed(1)}k` : overviewStats.total_lines_of_code || '0', sub: 'excl. comments',    color: '#60a5fa', delay: 0.19 },
-          { icon: '🔗', label: 'Dependencies',  value: overviewStats.total_dependencies || '0',    sub: 'direct & transitive', color: '#a78bfa', delay: 0.26 },
+          { icon: '', label: 'Total Files',  value: overviewStats.total_files?.toLocaleString() || '0', sub: 'across all dirs',   color: '#4ade80', delay: 0.05 },
+          { icon: '', label: 'Functions',     value: overviewStats.total_functions?.toLocaleString() || '0', sub: 'parsed & indexed',  color: '#fbbf24', delay: 0.12 },
+          { icon: '', label: 'Lines of Code', value: overviewStats.total_lines_of_code > 1000 ? `${(overviewStats.total_lines_of_code / 1000).toFixed(1)}k` : overviewStats.total_lines_of_code || '0', sub: 'excl. comments',    color: '#60a5fa', delay: 0.19 },
+          { icon: '', label: 'Dependencies',  value: overviewStats.total_dependencies || '0',    sub: 'direct & transitive', color: '#a78bfa', delay: 0.26 },
         ].map(s => <MiniStat key={s.label} {...s} />)}
       </div>
 
@@ -445,7 +445,7 @@ function TreeNode({ name, type, children, size, depth = 0, selectedFile, onSelec
         style={{ borderLeft: depth > 0 ? '2px dashed #1a4528' : 'none', color: isSel ? '#4ade80' : isDir ? '#86efac' : '#2d6a3f', background: isSel ? '#0d2a14' : 'transparent' }}
         onClick={() => isDir ? setOpen(!open) : onSelect?.(path, size)}
       >
-        <span>{isDir ? (open ? '📂' : '📁') : '📄'}</span>
+        <span>{isDir ? (open ? '' : '') : ''}</span>
         <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
         {!isDir && size && <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 5, color: '#1a4a2e', marginLeft: 8 }}>{formatSize(size)}</span>}
       </div>
@@ -584,8 +584,8 @@ export function RepoStructure() {
           </div>
           <div style={{ marginTop: 14 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12, marginBottom: 12 }}>
-              <MiniStat icon="🗂" label="Indexed Files" value={structure.file_count || '0'} color="#4ade80" />
-              <MiniStat icon="⚡" label="Total Symbols" value={structure.function_count || '0'} color="#fbbf24" />
+              <MiniStat icon="" label="Indexed Files" value={structure.file_count || '0'} color="#4ade80" />
+              <MiniStat icon="" label="Total Symbols" value={structure.function_count || '0'} color="#fbbf24" />
             </div>
 
             {/* Impact Analysis Details */}
@@ -1006,11 +1006,11 @@ export function RepoAnalytics() {
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 16, marginBottom: 28 }}>
         {[
-          { icon: '📁', label: 'Total Files',     value: report?.total_files || '0', sub: 'indexable files',   color: '#60a5fa', delay: 0.05 },
-          { icon: '🏆', label: 'Health Score',    value: health?.architecture_health_score || '0', sub: 'out of 100',  color: '#4ade80', delay: 0.12 },
-          { icon: '💎', label: 'Discipline',      value: layers?.architecture_discipline_score || '0', sub: 'layer adherence', color: '#fbbf24', delay: 0.15 },
-          { icon: '⚙️', label: 'Functions',       value: report?.total_functions || '0', sub: 'total symbols',  color: '#fbbf24', delay: 0.19 },
-          { icon: '📝', label: 'Dependencies',    value: health?.total_dependencies || '0',  sub: 'detected imports', color: '#a78bfa', delay: 0.26 },
+          { icon: '', label: 'Total Files',     value: report?.total_files || '0', sub: 'indexable files',   color: '#60a5fa', delay: 0.05 },
+          { icon: '', label: 'Health Score',    value: health?.architecture_health_score || '0', sub: 'out of 100',  color: '#4ade80', delay: 0.12 },
+          { icon: '', label: 'Discipline',      value: layers?.architecture_discipline_score || '0', sub: 'layer adherence', color: '#fbbf24', delay: 0.15 },
+          { icon: '', label: 'Functions',       value: report?.total_functions || '0', sub: 'total symbols',  color: '#fbbf24', delay: 0.19 },
+          { icon: '', label: 'Dependencies',    value: health?.total_dependencies || '0',  sub: 'detected imports', color: '#a78bfa', delay: 0.26 },
         ].map(s => <MiniStat key={s.label} {...s} />)}
       </div>
 
@@ -1069,7 +1069,7 @@ export function RepoAnalytics() {
                 ))
               ) : (
                 <div style={{ fontFamily: "'VT323',monospace", fontSize: 18, color: '#4ade80', textAlign: 'center', padding: '10px' }}>
-                  No circular dependencies detected! 🎮
+                  No circular dependencies detected! 
                 </div>
               )}
             </div>
