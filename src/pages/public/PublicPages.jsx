@@ -490,7 +490,7 @@ const PLANS = [
   },
   {
     name: "PRO",
-    price: "$12",
+    price: "$6",
     period: "/month",
     color: "#4ade80",
     border: "#22c55e",
@@ -509,7 +509,7 @@ const PLANS = [
   },
   {
     name: "TEAM",
-    price: "$49",
+    price: "$29",
     period: "/month",
     color: "#a78bfa",
     border: "#7c3aed",
