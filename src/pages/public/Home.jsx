@@ -482,6 +482,16 @@ const FEATURES = [
   { icon: '📊', title: 'Code Analytics', desc: 'Complexity scores, hotspot detection, language breakdown, and contributor impact analysis.', color: '#f87171' },
   { icon: '🔍', title: 'Function Drill', desc: 'Deep dive into any function — callers, callees, docstrings, history, and AI explanation.', color: '#34d399' },
   { icon: '🕐', title: 'Analysis History', desc: 'Every analysis is saved. Revisit, compare, and track how your codebase evolves over time.', color: '#60a5fa' },
+  {icon: '📝', 
+  title: 'PR Review', 
+  desc: 'Automatically analyze pull requests for bugs, code smells, and improvement suggestions with AI-powered insights.', 
+  color: '#60a5fa' },
+  {
+  icon: '⚠️',
+  title: 'Risk Factor',
+  desc: 'Identify risky areas in the codebase using AI. Detect complex modules, fragile dependencies, and potential bug hotspots before they cause problems.',
+  color: '#fb7185'
+}
 ];
 
 const STEPS = [

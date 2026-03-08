@@ -145,6 +145,7 @@ function RepoSidebar({ repoId }) {
       <SidebarLink to={`/${repoId}/analytics`}      icon="" label="Analytics"  />
       <SidebarLink to={`/${repoId}/ask`}            icon="" label="Ask AI"     />
       <SidebarLink to={`/${repoId}/history`}        icon="" label="History"    />
+      <SidebarLink to={`/${repoId}/pr-analysis`}        icon="" label="PR Analysis"    />
     </div>
   );
 }

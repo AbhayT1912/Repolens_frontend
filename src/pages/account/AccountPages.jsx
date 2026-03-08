@@ -466,11 +466,11 @@ export function Profile() {
    SETTINGS
 ══════════════════════════════════════════════════ */
 const TABS = [
-  { id: 'account',       label: '👤 ACCOUNT',       color: '#4ade80' },
-  { id: 'integrations',  label: '🔗 INTEGRATIONS',  color: '#60a5fa' },
-  { id: 'notifications', label: '🔔 NOTIFICATIONS', color: '#fbbf24' },
-  { id: 'billing',       label: '💳 BILLING',        color: '#a78bfa' },
-  { id: 'danger',        label: '⚠ DANGER ZONE',    color: '#f87171' },
+  { id: 'account',       label: ' ACCOUNT',       color: '#4ade80' },
+  { id: 'integrations',  label: ' INTEGRATIONS',  color: '#60a5fa' },
+  { id: 'notifications', label: ' NOTIFICATIONS', color: '#fbbf24' },
+  { id: 'billing',       label: ' BILLING',        color: '#a78bfa' },
+  { id: 'danger',        label: ' DANGER ZONE',    color: '#f87171' },
 ];
 
 export function Settings() {
