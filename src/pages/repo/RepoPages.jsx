@@ -1,6 +1,7 @@
 import { useParams, Link, NavLink, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import { api } from '../../utils/api';
+import { getRepoStatusLabel, useRepoStatus } from '../../hooks/useRepoStatus';
 
 /* ══════════════════════════════════════════════════
    SHARED CSS
@@ -159,6 +160,50 @@ function LoadingSkeleton() {
   );
 }
 
+function RepoProcessingState({ repoId, status }) {
+  return (
+    <Page>
+      <RepoTabBar repoId={repoId} />
+      <div className="mc-card" style={{ padding: '28px 24px', maxWidth: 720, margin: '60px auto 0', textAlign: 'center', boxShadow: '6px 6px 0 #040d07' }}>
+        <CornerPip color="#fbbf24" />
+        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: '#fbbf24', letterSpacing: 2, marginBottom: 16 }}>
+          ANALYSIS_IN_PROGRESS
+        </div>
+        <div style={{ marginBottom: 18 }}>
+          <McBadge color="#fbbf24">{status || 'RECEIVED'}</McBadge>
+        </div>
+        <div style={{ fontFamily: "'VT323',monospace", fontSize: 23, color: '#86efac', marginBottom: 12 }}>
+          {getRepoStatusLabel(status)}
+        </div>
+        <div style={{ fontFamily: "'VT323',monospace", fontSize: 18, color: '#2d6a3f', lineHeight: 1.6 }}>
+          RepoLens will unlock overview, structure, graph, and analytics automatically once this repository reaches READY.
+        </div>
+        <div style={{ marginTop: 24 }}>
+          <SegBar pct={status === 'GRAPHING' ? 85 : status === 'PARSING' ? 65 : status === 'SCANNING' ? 45 : status === 'CLONING' ? 25 : 10} color="#fbbf24" segments={18} />
+        </div>
+      </div>
+    </Page>
+  );
+}
+
+function RepoFailureState({ repoId, message }) {
+  return (
+    <Page>
+      <RepoTabBar repoId={repoId} />
+      <div className="mc-card" style={{ padding: 40, textAlign: 'center', borderColor: '#ef4444', maxWidth: 720, margin: '60px auto 0', boxShadow: '6px 6px 0 #040d07' }}>
+        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 8, color: '#f87171', marginBottom: 16 }}>ANALYSIS_FAILED.ERR</div>
+        <div style={{ fontFamily: "'VT323',monospace", fontSize: 20, color: '#ef4444', lineHeight: 1.6 }}>{message}</div>
+        <button
+          onClick={() => window.location.reload()}
+          style={{ marginTop: 24, padding: '10px 20px', background: '#ef4444', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: "'Press Start 2P',monospace", fontSize: 8 }}
+        >
+          RETRY_ACCESS
+        </button>
+      </div>
+    </Page>
+  );
+}
+
 /* ══════════════════════════════════════════════════
    TAB BAR
 ══════════════════════════════════════════════════ */
@@ -213,61 +258,49 @@ export function RepoOverview() {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const {
+    status,
+    meta: statusMeta,
+    loading: statusLoading,
+    error: statusError,
+    isReady,
+    isFailed,
+    isProcessing,
+  } = useRepoStatus(repoId);
 
   useEffect(() => {
-    let pollInterval;
-    
+    if (!isReady) return undefined;
+
+    let active = true;
+
     async function fetchReport() {
       try {
         const response = await api.get(`/${repoId}/report`);
-        
-        // Check repo status from response
-        const repoStatus = response.status || 'PROCESSING';
-        
+
+        if (!active) return;
+
         if (response.success && response.data) {
-          // Report is ready
           setReport(response.data);
           setLoading(false);
           setError(null);
-          if (pollInterval) clearInterval(pollInterval);
-        } else if (repoStatus === 'FAILED') {
-          // Repo processing failed, stop polling
-          setError(response.message || 'Repository processing failed');
-          setLoading(false);
-          if (pollInterval) clearInterval(pollInterval);
-        } else if (repoStatus === 'READY') {
-          // Repo is ready but report still generating, keep polling but less frequently
-          setLoading(true);
-          setError(null);
-        } else if (['RECEIVED', 'CLONING', 'SCANNING', 'PARSING', 'GRAPHING'].includes(repoStatus)) {
-          // Repo is still processing, show loading and keep polling
-          setLoading(true);
-          setError(null);
         } else {
-          // Report not ready, keep loading and wait for next poll
-          setLoading(true);
+          setError(response.message || 'Report not available.');
+          setLoading(false);
         }
       } catch (err) {
-        // If it's a 404, the backend hasn't saved the report yet (processing)
-        if (err.status === 404) {
-          setLoading(true);
-          setError(null);
-          // Keep polling...
-        } else {
-          setError(err.message);
-          setLoading(false);
-          if (pollInterval) clearInterval(pollInterval);
-        }
+        if (!active) return;
+        setError(err.message);
+        setLoading(false);
       }
     }
 
+    setLoading(true);
     fetchReport();
-    pollInterval = setInterval(fetchReport, 3000);
 
     return () => {
-      if (pollInterval) clearInterval(pollInterval);
+      active = false;
     };
-  }, [repoId]);
+  }, [isReady, repoId]);
 
   const handleDownloadPdf = async () => {
     try {
@@ -277,33 +310,11 @@ export function RepoOverview() {
     }
   };
 
-  if (loading && !report) {
-    return (
-      <Page>
-        <RepoTabBar repoId={repoId} />
-        <LoadingSkeleton />
-      </Page>
-    );
-  }
-
-  if (error) {
-    return (
-      <Page>
-        <RepoTabBar repoId={repoId} />
-        <div style={{ padding: 40, border: '4px solid #ef4444', background: 'rgba(239,68,68,0.05)', textAlign: 'center' }}>
-          <div style={{ fontSize: 40, marginBottom: 16 }}></div>
-          <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 8, color: '#f87171', marginBottom: 16 }}>ANALYSIS_FAILED.ERR</div>
-          <div style={{ fontFamily: "'VT323',monospace", fontSize: 20, color: '#ef4444' }}>{error}</div>
-          <button 
-            onClick={() => window.location.reload()}
-            style={{ marginTop: 24, padding: '10px 20px', background: '#ef4444', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: "'Press Start 2P',monospace", fontSize: 8 }}
-          >
-            RETRY_ACCESS
-          </button>
-        </div>
-      </Page>
-    );
-  }
+  if ((statusLoading || isProcessing) && !report) return <RepoProcessingState repoId={repoId} status={status} />;
+  if (isFailed) return <RepoFailureState repoId={repoId} message={statusMeta?.error_message || 'Repository processing failed.'} />;
+  if (statusError && !report) return <RepoFailureState repoId={repoId} message={statusError} />;
+  if (loading && !report) return <Page><RepoTabBar repoId={repoId} /><LoadingSkeleton /></Page>;
+  if (error) return <RepoFailureState repoId={repoId} message={error} />;
 
   const overviewStats = report || {};
   const modules = report?.modules || [];
@@ -484,8 +495,19 @@ export function RepoStructure() {
   const [error, setError] = useState(null);
   const [structure, setStructure] = useState({ files: [], functions: [] });
   const [tree, setTree] = useState([]);
+  const {
+    status,
+    meta: statusMeta,
+    loading: statusLoading,
+    error: statusError,
+    isReady,
+    isFailed,
+    isProcessing,
+  } = useRepoStatus(repoId);
 
   useEffect(() => {
+    if (!isReady) return undefined;
+
     let active = true;
     const fetchStructure = async () => {
       try {
@@ -505,7 +527,7 @@ export function RepoStructure() {
     };
     fetchStructure();
     return () => { active = false; };
-  }, [repoId]);
+  }, [isReady, repoId]);
 
   const handleSelectFile = async (path, size) => {
     setSelFile(path);
@@ -527,6 +549,9 @@ export function RepoStructure() {
     }
   };
 
+  if ((statusLoading || isProcessing) && !structure.files.length) return <RepoProcessingState repoId={repoId} status={status} />;
+  if (isFailed) return <RepoFailureState repoId={repoId} message={statusMeta?.error_message || 'Repository processing failed.'} />;
+  if (statusError && !structure.files.length) return <RepoFailureState repoId={repoId} message={statusError} />;
   if (loading) return (
     <Page>
       <RepoTabBar repoId={repoId} />
@@ -534,15 +559,7 @@ export function RepoStructure() {
     </Page>
   );
 
-  if (error) return (
-    <Page>
-      <RepoTabBar repoId={repoId} />
-      <div className="mc-card" style={{ padding: 40, textAlign: 'center', borderColor: '#ef4444' }}>
-        <p style={{ color: '#ef4444', fontFamily: "'VT323',monospace", fontSize: 20 }}>{error}</p>
-        <button className="mc-btn-primary" onClick={() => window.location.reload()}>Retry Fetch</button>
-      </div>
-    </Page>
-  );
+  if (error) return <RepoFailureState repoId={repoId} message={error} />;
 
   return (
     <Page>
@@ -726,8 +743,19 @@ export function RepoGraph() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
+  const {
+    status,
+    meta: statusMeta,
+    loading: statusLoading,
+    error: statusError,
+    isReady,
+    isFailed,
+    isProcessing,
+  } = useRepoStatus(repoId);
 
   useEffect(() => {
+    if (!isReady) return undefined;
+
     let active = true;
     async function fetchGraph() {
       try {
@@ -754,7 +782,7 @@ export function RepoGraph() {
     }
     fetchGraph();
     return () => { active = false; };
-  }, [repoId]);
+  }, [isReady, repoId]);
 
   const selNode = graphData.nodes.find(n => n.id === selected);
   const callers = selected ? graphData.edges.filter(([,b]) => b === selected).map(([a]) => a) : [];
@@ -763,6 +791,9 @@ export function RepoGraph() {
   const labelStride = getGraphLabelStride(graphData.nodes.length);
   const labelSize = getGraphLabelSize(graphData.nodes.length);
 
+  if ((statusLoading || isProcessing) && !graphData.nodes.length) return <RepoProcessingState repoId={repoId} status={status} />;
+  if (isFailed) return <RepoFailureState repoId={repoId} message={statusMeta?.error_message || 'Repository processing failed.'} />;
+  if (statusError && !graphData.nodes.length) return <RepoFailureState repoId={repoId} message={statusError} />;
   if (loading) return (
     <Page>
       <RepoTabBar repoId={repoId} />
@@ -770,15 +801,7 @@ export function RepoGraph() {
     </Page>
   );
 
-  if (error) return (
-    <Page>
-      <RepoTabBar repoId={repoId} />
-      <div className="mc-card" style={{ padding: 40, textAlign: 'center', borderColor: '#ef4444' }}>
-        <p style={{ color: '#ef4444', fontFamily: "'VT323',monospace", fontSize: 20 }}>{error}</p>
-        <button className="mc-btn-primary" onClick={() => window.location.reload()}>Retry Fetch</button>
-      </div>
-    </Page>
-  );
+  if (error) return <RepoFailureState repoId={repoId} message={error} />;
 
   return (
     <Page>
@@ -976,8 +999,19 @@ export function RepoAnalytics() {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const {
+    status,
+    meta: statusMeta,
+    loading: statusLoading,
+    error: statusError,
+    isReady,
+    isFailed,
+    isProcessing,
+  } = useRepoStatus(repoId);
 
   useEffect(() => {
+    if (!isReady) return undefined;
+
     let active = true;
     async function fetchData() {
       try {
@@ -1006,15 +1040,13 @@ export function RepoAnalytics() {
     }
     fetchData();
     return () => { active = false; };
-  }, [repoId]);
+  }, [isReady, repoId]);
 
+  if ((statusLoading || isProcessing) && !report) return <RepoProcessingState repoId={repoId} status={status} />;
+  if (isFailed) return <RepoFailureState repoId={repoId} message={statusMeta?.error_message || 'Repository processing failed.'} />;
+  if (statusError && !report) return <RepoFailureState repoId={repoId} message={statusError} />;
   if (loading) return <Page><RepoTabBar repoId={repoId} /><LoadingSkeleton /></Page>;
-  if (error) return (
-    <Page>
-      <RepoTabBar repoId={repoId} />
-      <div className="mc-card" style={{ padding: 40, textAlign: 'center', color: '#ef4444' }}>{error}</div>
-    </Page>
-  );
+  if (error) return <RepoFailureState repoId={repoId} message={error} />;
 
   const deadPct = report ? (report.dead_functions_count / report.total_functions * 100).toFixed(1) : '0';
 

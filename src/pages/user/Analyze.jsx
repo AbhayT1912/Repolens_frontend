@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../utils/api';
+import { READY_REPO_STATUS } from '../../hooks/useRepoStatus';
 
 /* ══════════════════════════════════════════════════
    DATA
@@ -215,27 +216,18 @@ export default function Analyze() {
       
       const repoId = response.repo_id;
       let status = response.status;
-      let reportReady = false;
       let pollCount = 0;
-      const maxPolls = 600; // ~10 minutes with 1s interval
-      const pollInterval = 1000; // Poll every 1 second
+      const maxPolls = 300; // ~10 minutes with 2s interval
+      const pollInterval = 2000;
 
-      // Poll until report is ready or job fails
-      while (!reportReady && status !== 'FAILED' && pollCount < maxPolls) {
+      // Poll only the repo status endpoint until the job finishes.
+      while (status !== READY_REPO_STATUS && status !== 'FAILED' && pollCount < maxPolls) {
         await new Promise(r => setTimeout(r, pollInterval));
         pollCount++;
 
         try {
-          const statusResponse = await api.get(`/${repoId}/report`);
-          
-          // If we get report data, the job is complete
-          if (statusResponse.success && statusResponse.data) {
-            reportReady = true;
-            status = 'READY';
-          } else {
-            // Update status from response
-            status = statusResponse.status || status;
-          }
+          const statusResponse = await api.get(`/${repoId}/status`);
+          status = statusResponse?.data?.status || status;
           
           // Update step based on status
           const statusMap = {
@@ -264,7 +256,7 @@ export default function Analyze() {
         return;
       }
 
-      if (!reportReady && pollCount >= maxPolls) {
+      if (status !== READY_REPO_STATUS && pollCount >= maxPolls) {
         setError('Repository processing timed out. Please refresh the page or try again later.');
         setLoading(false);
         return;
@@ -275,8 +267,7 @@ export default function Analyze() {
       await new Promise(r => setTimeout(r, 1000));
 
       // Navigate to overview
-      const navigateId = repoId || url.replace('https://github.com/', '').split('/').slice(0, 2).join('-').replace(/[^a-z0-9-]/gi, '-');
-      navigate(`/${navigateId}`);
+      navigate(`/${repoId}`);
     } catch (err) {
       setError(err.message);
       setLoading(false);

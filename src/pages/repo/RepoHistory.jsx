@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../../utils/api';
+import { getRepoStatusLabel, useRepoStatus } from '../../hooks/useRepoStatus';
 
 function formatDate(value) {
   if (!value) return 'N/A';
@@ -14,8 +15,19 @@ export default function RepoHistory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [historyData, setHistoryData] = useState(null);
+  const {
+    status,
+    meta: statusMeta,
+    loading: statusLoading,
+    error: statusError,
+    isReady,
+    isFailed,
+    isProcessing,
+  } = useRepoStatus(repoId);
 
   useEffect(() => {
+    if (!isReady) return undefined;
+
     let active = true;
 
     const load = async () => {
@@ -37,7 +49,7 @@ export default function RepoHistory() {
     return () => {
       active = false;
     };
-  }, [repoId]);
+  }, [isReady, repoId]);
 
   const orderedTrend = useMemo(() => {
     const trend = historyData?.trend || [];
@@ -85,14 +97,24 @@ export default function RepoHistory() {
         <Link to={`/${repoId}`} style={{ color: '#8ce99a', textDecoration: 'none' }}>Back to Overview</Link>
       </div>
 
-      {loading && <p>Loading history...</p>}
-      {!loading && error && <p style={{ color: '#ff6b6b' }}>{error}</p>}
+      {(statusLoading || isProcessing) && (
+        <div style={{ padding: '18px 0' }}>
+          <p>Preparing repository history...</p>
+          <p style={{ opacity: 0.8 }}>{getRepoStatusLabel(status)}</p>
+        </div>
+      )}
+      {!statusLoading && isFailed && (
+        <p style={{ color: '#ff6b6b' }}>{statusMeta?.error_message || 'Repository processing failed.'}</p>
+      )}
+      {!statusLoading && !isFailed && statusError && <p style={{ color: '#ff6b6b' }}>{statusError}</p>}
+      {isReady && loading && <p>Loading history...</p>}
+      {isReady && !loading && error && <p style={{ color: '#ff6b6b' }}>{error}</p>}
 
-      {!loading && !error && orderedTrend.length === 0 && (
+      {isReady && !loading && !error && orderedTrend.length === 0 && (
         <p>No saved report history available yet.</p>
       )}
 
-      {!loading && !error && historyData && (
+      {isReady && !loading && !error && historyData && (
         <div style={{ display: 'grid', gap: 12, marginBottom: 16 }}>
           <div style={{ border: '1px solid #2d6a4f', borderRadius: 8, padding: 14, background: '#081c15' }}>
             <strong>Repository Intelligence</strong>
@@ -109,7 +131,7 @@ export default function RepoHistory() {
         </div>
       )}
 
-      {!loading && !error && orderedTrend.length > 0 && (
+      {isReady && !loading && !error && orderedTrend.length > 0 && (
         <div style={{ display: 'grid', gap: 12 }}>
           {orderedTrend.map((item, index) => (
             <div
@@ -137,7 +159,7 @@ export default function RepoHistory() {
         </div>
       )}
 
-      {!loading && !error && historyData && <div style={{ marginTop: 16 }} />}
+      {isReady && !loading && !error && historyData && <div style={{ marginTop: 16 }} />}
     </div>
   );
 }
