@@ -219,12 +219,30 @@ export function RepoOverview() {
     async function fetchReport() {
       try {
         const response = await api.get(`/${repoId}/report`);
+        
+        // Check repo status from response
+        const repoStatus = response.status || 'PROCESSING';
+        
         if (response.success && response.data) {
+          // Report is ready
           setReport(response.data);
           setLoading(false);
           setError(null);
           if (pollInterval) clearInterval(pollInterval);
-        } else if (response.message === "Report not generated yet" || !response.success) {
+        } else if (repoStatus === 'FAILED') {
+          // Repo processing failed, stop polling
+          setError(response.message || 'Repository processing failed');
+          setLoading(false);
+          if (pollInterval) clearInterval(pollInterval);
+        } else if (repoStatus === 'READY') {
+          // Repo is ready but report still generating, keep polling but less frequently
+          setLoading(true);
+          setError(null);
+        } else if (['RECEIVED', 'CLONING', 'SCANNING', 'PARSING', 'GRAPHING'].includes(repoStatus)) {
+          // Repo is still processing, show loading and keep polling
+          setLoading(true);
+          setError(null);
+        } else {
           // Report not ready, keep loading and wait for next poll
           setLoading(true);
         }

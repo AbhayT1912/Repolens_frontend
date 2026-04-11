@@ -212,19 +212,70 @@ export default function Analyze() {
         repo_url: url 
       });
       setAnalyzeResponse(response);
-
-      // Simulation of visual steps for aesthetic effect during analysis
-      // Spread steps over ~25-30 seconds to match real backend time
-      for (let i = 0; i < STEPS.length - 1; i++) {
-        await new Promise(r => setTimeout(r, 4500));
-        setStep(i);
-      }
       
-      setStep(STEPS.length - 1);
-      await new Promise(r => setTimeout(r, 2000));
+      const repoId = response.repo_id;
+      let status = response.status;
+      let reportReady = false;
+      let pollCount = 0;
+      const maxPolls = 600; // ~10 minutes with 1s interval
+      const pollInterval = 1000; // Poll every 1 second
 
-      // Use the repo_id from backend if available, fallback to parts for route
-      const navigateId = response.repo_id || url.replace('https://github.com/', '').split('/').slice(0, 2).join('-').replace(/[^a-z0-9-]/gi, '-');
+      // Poll until report is ready or job fails
+      while (!reportReady && status !== 'FAILED' && pollCount < maxPolls) {
+        await new Promise(r => setTimeout(r, pollInterval));
+        pollCount++;
+
+        try {
+          const statusResponse = await api.get(`/${repoId}/report`);
+          
+          // If we get report data, the job is complete
+          if (statusResponse.success && statusResponse.data) {
+            reportReady = true;
+            status = 'READY';
+          } else {
+            // Update status from response
+            status = statusResponse.status || status;
+          }
+          
+          // Update step based on status
+          const statusMap = {
+            'RECEIVED': 0,
+            'CLONING': 1,
+            'SCANNING': 2,
+            'PARSING': 3,
+            'GRAPHING': 4,
+            'READY': 5,
+          };
+          
+          const newStep = statusMap[status] ?? 0;
+          if (newStep > (step || 0)) {
+            setStep(newStep);
+          }
+        } catch (statusErr) {
+          // Continue polling even if status fetch fails
+          console.warn('Status check failed:', statusErr);
+        }
+      }
+
+      // Check final status
+      if (status === 'FAILED') {
+        setError('Repository processing failed. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      if (!reportReady && pollCount >= maxPolls) {
+        setError('Repository processing timed out. Please refresh the page or try again later.');
+        setLoading(false);
+        return;
+      }
+
+      // Job completed - show final step
+      setStep(STEPS.length - 1);
+      await new Promise(r => setTimeout(r, 1000));
+
+      // Navigate to overview
+      const navigateId = repoId || url.replace('https://github.com/', '').split('/').slice(0, 2).join('-').replace(/[^a-z0-9-]/gi, '-');
       navigate(`/${navigateId}`);
     } catch (err) {
       setError(err.message);
