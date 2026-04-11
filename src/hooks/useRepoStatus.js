@@ -43,7 +43,7 @@ export function useRepoStatus(repoId, options = {}) {
 
     const loadStatus = async () => {
       try {
-        const response = await api.get(`/${repoId}/status`);
+        const response = await api.get(`/${repoId}/status`, { cache: 'no-store' });
 
         if (!active) return;
 

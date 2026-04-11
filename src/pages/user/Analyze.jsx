@@ -226,7 +226,7 @@ export default function Analyze() {
         pollCount++;
 
         try {
-          const statusResponse = await api.get(`/${repoId}/status`);
+          const statusResponse = await api.get(`/${repoId}/status`, { cache: 'no-store' });
           status = statusResponse?.data?.status || status;
           
           // Update step based on status
