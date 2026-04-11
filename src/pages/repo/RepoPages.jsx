@@ -168,6 +168,7 @@ function RepoTabBar({ repoId }) {
     { to: `/${repoId}/structure`, label: ' Structure'             },
     { to: `/${repoId}/graph`,     label: ' Call Graph'            },
     { to: `/${repoId}/analytics`, label: ' Analytics'             },
+    { to: `/${repoId}/security`,  label: ' 🔒 Security'           },
     { to: `/${repoId}/pr-analysis`, label: ' PR Analysis'         },
     { to: `/${repoId}/ask`,       label: ' Ask AI'                },
     { to: `/${repoId}/history`,   label: ' History'               },
